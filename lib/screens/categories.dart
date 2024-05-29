@@ -5,7 +5,7 @@ import '../models/meal.dart';
 import '../screens/meals.dart';
 import '../widgets/category_grid_item.dart';
 
-class CategoriesScreen extends StatelessWidget {
+class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({
     super.key,
     required this.avaiableMeals,
@@ -13,8 +13,36 @@ class CategoriesScreen extends StatelessWidget {
 
   final List<Meal> avaiableMeals;
 
+  @override
+  State<CategoriesScreen> createState() => _CategoriesScreenState();
+}
+
+class _CategoriesScreenState extends State<CategoriesScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+      lowerBound: 0,
+      upperBound: 1,
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   void _selectCateogry(BuildContext context, CategoryDTO categoryDTO) {
-    final filteredMeals = avaiableMeals
+    final filteredMeals = widget.avaiableMeals
         .where((meal) => meal.categories.contains(categoryDTO.id))
         .toList();
 
@@ -30,27 +58,39 @@ class CategoriesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 3 / 2,
-        crossAxisSpacing: 20,
-        mainAxisSpacing: 20,
-      ),
-      children:
-          // Use Map
-          // availableCategories
-          //     .map((e) => CategoryGridItem(categoryDTO: e))
-          //     .toList()
-          [
-        for (final category in availableCategories)
-          CategoryGridItem(
-            categoryDTO: category,
-            onSelectCategory: () {
-              _selectCateogry(context, category);
-            },
+    return AnimatedBuilder(
+        animation: _animationController,
+        child: GridView(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 3 / 2,
+            crossAxisSpacing: 20,
+            mainAxisSpacing: 20,
           ),
-      ],
-    );
+          children:
+              // Use Map
+              // availableCategories
+              //     .map((e) => CategoryGridItem(categoryDTO: e))
+              //     .toList()
+              [
+            for (final category in availableCategories)
+              CategoryGridItem(
+                categoryDTO: category,
+                onSelectCategory: () {
+                  _selectCateogry(context, category);
+                },
+              ),
+          ],
+        ),
+        builder: (context, child) => SlideTransition(
+              position: Tween(
+                begin: const Offset(0, 0.3),
+                end: const Offset(0, 0),
+              ).animate(CurvedAnimation(
+                parent: _animationController,
+                curve: Curves.easeInOut,
+              )),
+              child: child,
+            ));
   }
 }
